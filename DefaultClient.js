@@ -19,8 +19,7 @@ class VersusClient extends SimpleObservable {
   async init(code) {
     await this.close()
 
-    let endpoint = code ? `/game/${code}/join` : '/game/create'
-    const url = window.location.origin.replace('http', 'ws') + endpoint
+    let url = this._getConnectURL(code)
     this.__connection = new HeartbeatSocket(url, Types.CONNECTION.HEARTBEAT)
     this.__connection.on(HeartbeatSocket.EVENT_MESSAGE_RECEIVED, this.__handleDataMessage)
     this.__connection.on(HeartbeatSocket.EVENT_CONNECTION_ERROR, error => {
@@ -41,7 +40,7 @@ class VersusClient extends SimpleObservable {
     }
   }
 
-  // Add functions to shorthand creating events here
+  // Add functions to shorthand creating events
   // i.e.:
   /*
 
@@ -52,6 +51,26 @@ class VersusClient extends SimpleObservable {
 
    */
 
+  // Override this function to handle reading new custom event types
+  /**
+   * @param {DataMessage} dataMessage
+   * @return {Event|null}
+   */
+  _generateEventFromDataMessage(dataMessage) {
+    console.log('Unrecognized Event Type: ' + dataMessage.type)
+    return null
+  }
+
+  /**
+   * @param {string} code
+   * @return {string}
+   * @private
+   */
+  _getConnectURL(code) {
+    const endpoint = code ? `/game/${code}/join` : '/game/create'
+    return window.location.origin.replace('http', 'ws') + endpoint
+  }
+
   /**
    * @private
    * @param {DataMessage} dataMessage
@@ -61,9 +80,6 @@ class VersusClient extends SimpleObservable {
 
     // build the correct event object given the type
     switch (dataMessage.type) {
-      // -------------------------------------------------------------
-      // Add custom event handling here
-
       // -------------------------------------------------------------
       case Types.CONNECTION.WAITING:
         event = new ConnectionWaitingEvent(dataMessage.payload.connectCode)
@@ -82,7 +98,9 @@ class VersusClient extends SimpleObservable {
         break
 
       default:
-        console.log('Unrecognized Event Type: ' + dataMessage.type)
+        // -------------------------------------------------------------
+        event = this._generateEventFromDataMessage(dataMessage)
+        break
     }
 
     if (event) {
