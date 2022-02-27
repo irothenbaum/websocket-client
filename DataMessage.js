@@ -1,15 +1,24 @@
 class DataMessage {
   /**
    * @param {string} type
+   * @param {string} payload
+   * @param {number} timestampSent
+   * @param {number?} timestampReceived
+   */
+  constructor(type, payload, timestampSent, timestampReceived) {
+    this.type = type
+    this.payload = payload
+    this.timestampSent = timestampSent
+    this.timestampReceived = timestampReceived
+  }
+
+  /**
+   * @param {string} type
    * @param {*?} payload
    * @returns {DataMessage}
    */
   static toSend(type, payload) {
-    let retVal = new DataMessage()
-    retVal.type = type
-    retVal.payload = payload
-    retVal.timestampSent = Date.now()
-    return retVal
+    return new DataMessage(type, payload, Date.now())
   }
 
   /**
@@ -18,12 +27,12 @@ class DataMessage {
    */
   static fromReceived(jsonString) {
     let data = JSON.parse(jsonString)
-    let retVal = new DataMessage()
-    retVal.type = data.type
-    retVal.payload = data.payload
-    retVal.timestampSent = data.timestampSent
-    retVal.timestampReceived = Date.now()
-    return retVal
+    return new DataMessage(
+      data.type,
+      data.payload,
+      data.timestampSent,
+      Date.now(),
+    )
   }
 }
 
