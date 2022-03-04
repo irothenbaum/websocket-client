@@ -11,21 +11,28 @@ class HeartbeatSocket extends SimpleObservable {
   /**
    * @param {string} url
    * @param {string} heartbeatEventType
+   * @param {number?} heartbeatRate
    */
-  constructor(url, heartbeatEventType) {
+  constructor(url, heartbeatEventType, heartbeatRate = 1000) {
     super()
     this.send = this.send.bind(this)
 
     this.__missedHeartbeats = 0
     this.__heartbeatEventType = heartbeatEventType
+    this.__heartbeatRate = heartbeatRate
     this.__queue = []
+
     this.__socket = new WebSocket(url)
-    this.__socket.onopen = this.init.bind(this)
+    this.__socket.onopen = () => this.startHeartbeat(this.__heartbeatRate)
     this.__socket.onmessage = this.__handleSocketMessage.bind(this)
+    this.__socket.onerror = this.__handleError.bind(this)
   }
 
-  init() {
-    this.startHeartbeat(1000)
+  /**
+   * @returns {boolean}
+   */
+  isOpen() {
+    return this.__socket.readyState === OPEN_STATE
   }
 
   /**
@@ -46,8 +53,7 @@ class HeartbeatSocket extends SimpleObservable {
         }
         this.send(this.__heartbeatEventType)
       } catch (e) {
-        this.trigger(HeartbeatSocket.EVENT_CONNECTION_ERROR, e)
-        this.close()
+        this.__handleError(e)
       }
     }, timeout)
   }
@@ -57,7 +63,7 @@ class HeartbeatSocket extends SimpleObservable {
    * @param {object?} data
    */
   send(type, data) {
-    if (this.__socket.readyState !== OPEN_STATE) {
+    if (!this.isOpen()) {
       this.__queue.push(arguments)
       this.__startQueue()
       return false
@@ -66,6 +72,24 @@ class HeartbeatSocket extends SimpleObservable {
     }
   }
 
+  close() {
+    clearInterval(this.__heartbeatInterval)
+    delete this.__heartbeatInterval
+
+    clearInterval(this.__queueInterval)
+    delete this.__queueInterval
+
+    this.__socket.close()
+    this.trigger(HeartbeatSocket.EVENT_CONNECTION_CLOSED)
+  }
+
+  // --------------------------------------------------------------------------
+  // PRIVATE FUNCTIONS
+  
+  /**
+   * @param {string} data
+   * @private
+   */
   __handleSocketMessage({data}) {
     let dataObj = DataMessage.fromReceived(data)
 
@@ -81,6 +105,7 @@ class HeartbeatSocket extends SimpleObservable {
   /**
    * @param {string} type
    * @param {object?} data
+   * @private
    */
   __sendInternal(type, data) {
     let dataMessage = DataMessage.toSend(type, data)
@@ -88,6 +113,9 @@ class HeartbeatSocket extends SimpleObservable {
     this.trigger(HeartbeatSocket.EVENT_MESSAGE_SENT, dataMessage)
   }
 
+  /**
+   * @private
+   */
   __startQueue() {
     if (this.__queueInterval) {
       // do nothing, it's already started
@@ -125,15 +153,13 @@ class HeartbeatSocket extends SimpleObservable {
     }, QUEUE_CHECK_TIMEOUT)
   }
 
-  close() {
-    clearInterval(this.__heartbeatInterval)
-    delete this.__heartbeatInterval
-
-    clearInterval(this.__queueInterval)
-    delete this.__queueInterval
-
-    this.__socket.close()
-    this.trigger(HeartbeatSocket.EVENT_CONNECTION_CLOSED)
+  /**
+   * @param {Error} e
+   * @private
+   */
+  __handleError(e) {
+    this.trigger(HeartbeatSocket.EVENT_CONNECTION_ERROR, e)
+    this.close()
   }
 }
 
@@ -145,7 +171,7 @@ HeartbeatSocket.EVENT_CONNECTION_ERROR = 'HeartbeatSocket:connection-error' // e
 
 // ----------------------------------------------------------------------------------------
 
-class HeartbeatConnectionError extends Error {}
+export class HeartbeatConnectionError extends Error {}
 
 // ----------------------------------------------------------------------------------------
 

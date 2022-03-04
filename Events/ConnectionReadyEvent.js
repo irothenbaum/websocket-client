@@ -2,10 +2,13 @@ import Event from './Event'
 const Types = require('./Types')
 
 class ConnectionReadyEvent extends Event {
-  constructor() {
+  /**
+   * @param {string} recoveryCode
+   */
+  constructor(recoveryCode) {
     super(Types.CONNECTION.READY)
 
-    // TODO: What should we include in this event?
+    this.recoveryCode = recoveryCode
   }
 }
 

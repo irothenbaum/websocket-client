@@ -2,9 +2,14 @@ import Event from './Event'
 const Types = require('./Types')
 
 class ConnectionWaitingEvent extends Event {
-  constructor(connectCode) {
+  /**
+   * @param {string} connectCode
+   * @param {string?} recoveryCode
+   */
+  constructor(connectCode, recoveryCode) {
     super(Types.CONNECTION.WAITING)
     this.connectCode = connectCode
+    this.recoveryCode = recoveryCode
   }
 }
 
