@@ -12,7 +12,7 @@ const MAX_DELAY = 60000
 // 1 second
 const STARTING_DELAY = 1000
 
-class VersusClient extends SimpleObservable {
+class DefaultClient extends SimpleObservable {
   constructor() {
     super()
 
@@ -120,7 +120,7 @@ class VersusClient extends SimpleObservable {
         this.trigger(event.type, event)
         this.__connection.close()
 
-        setTimeout(() => this.__beginAttemptReconnect(code), this.__reconnectDelay)
+        this.__reconnectTimeout = setTimeout(() => this.__beginAttemptReconnect(code), this.__reconnectDelay)
 
       }
       console.error(error)
@@ -199,4 +199,4 @@ class VersusClient extends SimpleObservable {
   }
 }
 
-export default VersusClient
+export default DefaultClient
