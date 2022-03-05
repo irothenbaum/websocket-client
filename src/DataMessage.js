@@ -1,7 +1,7 @@
 class DataMessage {
   /**
    * @param {string} type
-   * @param {string} payload
+   * @param {*} payload
    * @param {number} timestampSent
    * @param {number?} timestampReceived
    */
@@ -27,12 +27,7 @@ class DataMessage {
    */
   static fromReceived(jsonString) {
     let data = JSON.parse(jsonString)
-    return new DataMessage(
-      data.type,
-      data.payload,
-      data.timestampSent,
-      Date.now(),
-    )
+    return new DataMessage(data.type, data.payload, data.timestampSent, Date.now())
   }
 }
 

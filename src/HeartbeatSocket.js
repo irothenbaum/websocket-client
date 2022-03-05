@@ -85,7 +85,7 @@ class HeartbeatSocket extends SimpleObservable {
 
   // --------------------------------------------------------------------------
   // PRIVATE FUNCTIONS
-  
+
   /**
    * @param {string} data
    * @private
@@ -123,7 +123,7 @@ class HeartbeatSocket extends SimpleObservable {
     }
 
     this.__queueInterval = setInterval(() => {
-      if (this.__socket.readyState === OPEN_STATE) {
+      if (this.isOpen()) {
         // it's open, no need to continue checking
         clearInterval(this.__queueInterval)
         delete this.__queueInterval
@@ -140,12 +140,12 @@ class HeartbeatSocket extends SimpleObservable {
             // If it does die again, the queue will restart and that item will be back at the end.
             // so, while not ideal because it loses its place in line, it will properly prevent duplicates + dropped messages
             this.send(args[0], args[1])
-          } while (this.__queue.length > 0 && this.__socket.readyState === OPEN_STATE)
+          } while (this.__queue.length > 0 && this.isOpen())
 
           // if we broke our loop because it died again, we need to re-start the poll
           // NOTE: This is only *needed* if it dies in the microsecond between the last send(...) and the while condition check
           // because if the send(...) failed it would have already started again
-          if (this.__socket.readyState !== OPEN_STATE && this.__queue.length > 0) {
+          if (!this.isOpen() && this.__queue.length > 0) {
             this.__startQueue()
           }
         }
