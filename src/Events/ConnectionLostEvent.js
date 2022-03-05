@@ -1,7 +1,10 @@
 import Event from './Event'
-const Types = require('./Types')
+import Types from './Types'
 
 class ConnectionLostEvent extends Event {
+  /**
+   * @param {string} connectCode
+   */
   constructor(connectCode) {
     super(Types.CONNECTION.LOST)
     this.connectCode = connectCode

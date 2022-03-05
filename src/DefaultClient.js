@@ -1,6 +1,6 @@
 import HeartbeatSocket, {HeartbeatConnectionError} from './HeartbeatSocket'
 import SimpleObservable from './SimpleObservable'
-const Types = require('./Events/Types')
+import Types from './Events/Types'
 import ConnectionInitEvent from './Events/ConnectionInitEvent'
 import ConnectionWaitingEvent from './Events/ConnectionWaitingEvent'
 import ConnectionReadyEvent from './Events/ConnectionReadyEvent'

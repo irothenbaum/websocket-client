@@ -1,0 +1,24 @@
+{
+  "name": "websocket-client",
+  "description": "Just a small partial library I can re-use that plays nice with my peer to peer websocket server.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "jest": "^27.5.1",
+    "mock-socket": "^9.1.2",
+    "prettier": "^2.5.1"
+  },
+  "scripts": {
+    "tests": "jest --config=tests/jest.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/irothenbaum/websocket-client.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/irothenbaum/websocket-client/issues"
+  },
+  "homepage": "https://github.com/irothenbaum/websocket-client#readme"
+}

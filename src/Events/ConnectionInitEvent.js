@@ -1,5 +1,5 @@
 import Event from './Event'
-const Types = require('./Types')
+import Types from './Types'
 
 class ConnectionInitEvent extends Event {
   /**
