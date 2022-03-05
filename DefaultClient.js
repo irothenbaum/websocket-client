@@ -5,6 +5,7 @@ import ConnectionInitEvent from './Events/ConnectionInitEvent'
 import ConnectionWaitingEvent from './Events/ConnectionWaitingEvent'
 import ConnectionReadyEvent from './Events/ConnectionReadyEvent'
 import ConnectionLostEvent from "./Events/ConnectionLostEvent";
+import ConnectionFoundEvent from "./Events/ConnectionFoundEvent"
 
 // 1 minute
 const MAX_DELAY = 60000
@@ -18,6 +19,7 @@ class VersusClient extends SimpleObservable {
     this.__recoveryCode = undefined
     this.__connection = undefined
     this.__reconnectDelay = STARTING_DELAY
+    this.__hasPulse = false
 
     this.__handleDataMessage = this.__handleDataMessage.bind(this)
   }
@@ -34,10 +36,13 @@ class VersusClient extends SimpleObservable {
 
     // we only trigger the init event on Init
     const initEvent = new ConnectionInitEvent(code)
-    this.__connection.send(Types.CONNECTION.INIT, initEvent)
-    this.trigger(Types.CONNECTION.INIT, initEvent)
+    this.__connection.send(initEvent.type, initEvent)
+    this.trigger(initEvent.type, initEvent)
   }
 
+  /**
+   * @returns {Promise<void>}
+   */
   async close() {
     if (this.__connection) {
       this.__connection.close()
@@ -46,6 +51,13 @@ class VersusClient extends SimpleObservable {
 
     delete this.__connection
     clearTimeout(this.__reconnectTimeout)
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  hasPulse() {
+    return this.__hasPulse
   }
 
   // Add functions to shorthand creating events
@@ -114,6 +126,7 @@ class VersusClient extends SimpleObservable {
       console.error(error)
     })
     socket.on(HeartbeatSocket.EVENT_CONNECTION_CLOSED, () => {
+      this.__hasPulse = false
       delete this.__connection
     })
 
@@ -131,7 +144,9 @@ class VersusClient extends SimpleObservable {
     let url = this._getReconnectURL(code)
     this.__connection = this._composeSocket(code, url)
 
-    // NOTE: we only trigger the init event on Init, not here
+    // here we broadcast that we've re-established a connection
+    const foundEvent = new ConnectionFoundEvent()
+    this.trigger(foundEvent.type, foundEvent)
 
     // make sure we never wait more than the max delay
     this.__reconnectDelay = Math.min(MAX_DELAY, this.__reconnectDelay * 2)
@@ -142,6 +157,7 @@ class VersusClient extends SimpleObservable {
    * @param {DataMessage} dataMessage
    */
   __handleDataMessage(dataMessage) {
+    this.__hasPulse = true
     // reset our reconnect timeout
     this.__reconnectDelay = STARTING_DELAY
     let event

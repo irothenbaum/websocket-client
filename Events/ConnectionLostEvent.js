@@ -3,7 +3,7 @@ const Types = require('./Types')
 
 class ConnectionLostEvent extends Event {
   constructor(connectCode) {
-    super(Types.CONNECTION.WAITING)
+    super(Types.CONNECTION.LOST)
     this.connectCode = connectCode
   }
 }
