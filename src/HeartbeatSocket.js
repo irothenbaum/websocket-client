@@ -21,11 +21,38 @@ class HeartbeatSocket extends SimpleObservable {
     this.__heartbeatEventType = heartbeatEventType
     this.__heartbeatRate = heartbeatRate
     this.__queue = []
+    this.__hasConnected = false
 
     this.__socket = new WebSocket(url)
-    this.__socket.onopen = () => this.startHeartbeat(this.__heartbeatRate)
+    this.__socket.onopen = () => {
+      this.__hasConnected = true
+      this.startHeartbeat(this.__heartbeatRate)
+    }
     this.__socket.onmessage = this.__handleSocketMessage.bind(this)
     this.__socket.onerror = this.__handleError.bind(this)
+  }
+
+  /**
+   * @return {Promise<HeartbeatSocket>}
+   */
+  async waitForConnection() {
+    if (!this.__firstConnectionPromise) {
+      this.__firstConnectionPromise = new Promise((resolve, reject) => {
+        const interval = setInterval(() => {
+
+          if (this.hasConnected()) {
+            clearInterval(interval)
+            resolve()
+          } else if (!this.__firstConnectionPromise) {
+            clearInterval(interval)
+            reject()
+          }
+        }, 50)
+      })
+    }
+
+    await this.__firstConnectionPromise
+    return this
   }
 
   /**
@@ -33,6 +60,13 @@ class HeartbeatSocket extends SimpleObservable {
    */
   isOpen() {
     return this.__socket.readyState === OPEN_STATE
+  }
+
+  /**
+   * @return {boolean}
+   */
+  hasConnected() {
+    return this.__hasConnected
   }
 
   /**
@@ -158,6 +192,9 @@ class HeartbeatSocket extends SimpleObservable {
    * @private
    */
   __handleError(e) {
+    // by deleting this reference, our waitTillConnected poll will recognize it's failed
+    delete this.__firstConnectionPromise
+
     this.trigger(HeartbeatSocket.EVENT_CONNECTION_ERROR, e)
     this.close()
   }

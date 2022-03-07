@@ -116,8 +116,15 @@ class DefaultClient extends SimpleObservable {
     socket.on(HeartbeatSocket.EVENT_MESSAGE_RECEIVED, this.__handleDataMessage)
     socket.on(HeartbeatSocket.EVENT_CONNECTION_ERROR, error => {
       if (error instanceof HeartbeatConnectionError) {
-        let event = new ConnectionLostEvent()
-        this.trigger(event.type, event)
+        // if this is the first tie we've lost connection, reconnectTimeout will at its starting value
+        // and we'll want to send a Lost event. Subsequent failures to connect should not trigger another event
+        if (this.__reconnectTimeout > STARTING_DELAY) {
+          let event = new ConnectionLostEvent(code)
+          this.trigger(event.type, event)
+        }
+
+        // make sure we never wait more than the max delay
+        this.__reconnectDelay = Math.min(MAX_DELAY, this.__reconnectDelay * 2)
         this.__connection.close()
 
         this.__reconnectTimeout = setTimeout(() => this.__beginAttemptReconnect(code), this.__reconnectDelay)
@@ -144,12 +151,13 @@ class DefaultClient extends SimpleObservable {
     let url = this._getReconnectURL(code)
     this.__connection = this._composeSocket(code, url)
 
-    // here we broadcast that we've re-established a connection
-    const foundEvent = new ConnectionFoundEvent()
-    this.trigger(foundEvent.type, foundEvent)
-
-    // make sure we never wait more than the max delay
-    this.__reconnectDelay = Math.min(MAX_DELAY, this.__reconnectDelay * 2)
+    this.__connection.waitForConnection().then(() => {
+      // here we broadcast that we've re-established a connection
+      const foundEvent = new ConnectionFoundEvent()
+      this.trigger(foundEvent.type, foundEvent)
+    }).catch(err => {
+      // do nothing, we catch it when the HeartbeatSocket.EVENT_CONNECTION_ERROR is caught
+    })
   }
 
   /**

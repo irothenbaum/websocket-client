@@ -1,10 +1,10 @@
-import {expect, jest} from '@jest/globals'
+import {jest} from '@jest/globals'
 import {pause} from './utilities'
 import {Server, WebSocket} from 'mock-socket'
-// const {HeartbeatSocket, DataMessage} = require('../index')
 import {HeartbeatSocket, DataMessage} from '../index'
 
 describe('Heartbeat Socket', () => {
+  global.WebSocket = WebSocket
   const fakeURL = 'ws://localhost:8080'
 
   test('Can connect, heartbeat, and send messages', async () => {
@@ -142,5 +142,28 @@ describe('Heartbeat Socket', () => {
     expect(clientSocket.trigger.mock.calls[0][0]).toBe(HeartbeatSocket.EVENT_CONNECTION_CLOSED)
 
     mockServer.close()
+  })
+
+  test('Can await connection', async () => {
+    global.WebSocket = function (url) {
+      console.log(url)
+    }
+    const clientSocket = new HeartbeatSocket(fakeURL)
+    clientSocket.hasConnected = jest.fn(clientSocket.hasConnected)
+
+    expect(0).toBe(0)
+
+    const TIMEOUT = 1000
+    setTimeout(() => {
+      clientSocket.__socket.onopen()
+    }, TIMEOUT)
+
+    let start = Date.now()
+    await clientSocket.waitForConnection()
+    let stop = Date.now()
+    // within 20ms of the connection being established
+    expect(stop - start).toBeLessThanOrEqual(TIMEOUT + 100)
+    // with 0 latency, would be 20. But we know the interval can't run every 50ms in 0 time so we use 15.
+    expect(clientSocket.hasConnected.mock.calls.length).toBeGreaterThanOrEqual(15)
   })
 })
