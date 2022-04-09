@@ -32,7 +32,7 @@ class DefaultClient extends SimpleObservable {
     await this.close()
 
     let url = this._getConnectURL(code)
-    this.__connection = this._composeSocket(code, url)
+    this.__connection = this._configureSocket(code, url)
 
     // we only trigger the init event on Init
     const initEvent = new ConnectionInitEvent(code)
@@ -80,7 +80,7 @@ class DefaultClient extends SimpleObservable {
    * @return {Event|null}
    */
   _generateEventFromDataMessage(dataMessage) {
-    console.log('Unrecognized Event Type: ' + dataMessage.type)
+    console.warn('Unrecognized Event Type: ' + dataMessage.type)
     return null
   }
 
@@ -106,29 +106,39 @@ class DefaultClient extends SimpleObservable {
   }
 
   /**
+   * @param {string} url
+   * @return {HeartbeatSocket}
+   * @private
+   */
+  _composeSocket(url) {
+    return new HeartbeatSocket(url, Types.CONNECTION.HEARTBEAT)
+  }
+
+  /**
    * @param {string} code
    * @param {string} url
    * @returns {HeartbeatSocket}
    * @private
    */
-  _composeSocket(code, url) {
-    const socket =  new HeartbeatSocket(url, Types.CONNECTION.HEARTBEAT)
-    socket.on(HeartbeatSocket.EVENT_MESSAGE_RECEIVED, this.__handleDataMessage)
+  _configureSocket(code, url) {
+    const socket = this._composeSocket(url)
+    socket.on(HeartbeatSocket.EVENT_MESSAGE_RECEIVED, dm => this.__handleDataMessage(dm))
     socket.on(HeartbeatSocket.EVENT_CONNECTION_ERROR, error => {
       if (error instanceof HeartbeatConnectionError) {
-        // if this is the first tie we've lost connection, reconnectTimeout will at its starting value
+        // if this is the first time we've lost connection, reconnectTimeout will be at its starting value
         // and we'll want to send a Lost event. Subsequent failures to connect should not trigger another event
-        if (this.__reconnectTimeout > STARTING_DELAY) {
+        if (this.__reconnectDelay === STARTING_DELAY) {
           let event = new ConnectionLostEvent(code)
           this.trigger(event.type, event)
         }
 
+        this.__reconnectTimeout = setTimeout(() => {
+          delete this.__reconnectTimeout
+          this.__beginAttemptReconnect(code)
+        }, this.__reconnectDelay)
         // make sure we never wait more than the max delay
         this.__reconnectDelay = Math.min(MAX_DELAY, this.__reconnectDelay * 2)
         this.__connection.close()
-
-        this.__reconnectTimeout = setTimeout(() => this.__beginAttemptReconnect(code), this.__reconnectDelay)
-
       }
       console.error(error)
     })
@@ -149,7 +159,7 @@ class DefaultClient extends SimpleObservable {
    */
   __beginAttemptReconnect(code) {
     let url = this._getReconnectURL(code)
-    this.__connection = this._composeSocket(code, url)
+    this.__connection = this._configureSocket(code, url)
 
     this.__connection.waitForConnection().then(() => {
       // here we broadcast that we've re-established a connection
