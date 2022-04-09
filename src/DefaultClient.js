@@ -66,10 +66,17 @@ class DefaultClient extends SimpleObservable {
 
   markPlayerReady(status) {
     let eventInstance = new GamePlayerReadyEvent(status)
-    this.__connection.send(eventInstance.type, eventInstance)
+    this.getConnection().send(eventInstance.type, eventInstance)
   }
 
    */
+
+  /**
+   * @return {HeartbeatSocket}
+   */
+  getConnection() {
+    return this.__connection
+  }
 
   // ------------------------------------------------------------------------------------------
   // PROTECTED FUNCTIONS
