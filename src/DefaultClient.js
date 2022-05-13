@@ -1,11 +1,11 @@
-import HeartbeatSocket, {HeartbeatConnectionError} from './HeartbeatSocket'
-import SimpleObservable from './SimpleObservable'
-import Types from './Events/Types'
-import ConnectionInitEvent from './Events/ConnectionInitEvent'
-import ConnectionWaitingEvent from './Events/ConnectionWaitingEvent'
-import ConnectionReadyEvent from './Events/ConnectionReadyEvent'
-import ConnectionLostEvent from "./Events/ConnectionLostEvent";
-import ConnectionFoundEvent from "./Events/ConnectionFoundEvent"
+import HeartbeatSocket, {HeartbeatConnectionError} from './HeartbeatSocket.js'
+import SimpleObservable from './SimpleObservable.js'
+import Types from './Events/Types.js'
+import ConnectionInitEvent from './Events/ConnectionInitEvent.js'
+import ConnectionWaitingEvent from './Events/ConnectionWaitingEvent.js'
+import ConnectionReadyEvent from './Events/ConnectionReadyEvent.js'
+import ConnectionLostEvent from './Events/ConnectionLostEvent.js'
+import ConnectionFoundEvent from './Events/ConnectionFoundEvent.js'
 
 // 1 minute
 const MAX_DELAY = 60000

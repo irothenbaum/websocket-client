@@ -1,5 +1,5 @@
-import Event from './Event'
-import Types from './Types'
+import Event from './Event.js'
+import Types from './Types.js'
 
 class ConnectionReadyEvent extends Event {
   /**

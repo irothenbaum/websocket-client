@@ -1,5 +1,5 @@
-import SimpleObservable from './SimpleObservable'
-import DataMessage from './DataMessage'
+import SimpleObservable from './SimpleObservable.js'
+import DataMessage from './DataMessage.js'
 
 // 50 milliseconds
 const QUEUE_CHECK_TIMEOUT = 50

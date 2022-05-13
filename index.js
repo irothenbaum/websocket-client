@@ -1,14 +1,14 @@
-import DataMessage from './src/DataMessage'
-import SimpleObservable from './src/SimpleObservable'
-import HeartbeatSocket from './src/HeartbeatSocket'
-import DefaultClient from "./src/DefaultClient";
-import Event from './src/Events/Event'
-import Types from './src/Events/Types'
-import ConnectionLostEvent from './src/Events/ConnectionLostEvent'
-import ConnectionFoundEvent from './src/Events/ConnectionFoundEvent'
-import ConnectionInitEvent from './src/Events/ConnectionInitEvent'
-import ConnectionReadyEvent from './src/Events/ConnectionReadyEvent'
-import ConnectionWaitingEvent from './src/Events/ConnectionWaitingEvent'
+import DataMessage from './src/DataMessage.js'
+import SimpleObservable from './src/SimpleObservable.js'
+import HeartbeatSocket from './src/HeartbeatSocket.js'
+import DefaultClient from './src/DefaultClient.js'
+import Event from './src/Events/Event.js'
+import Types from './src/Events/Types.js'
+import ConnectionLostEvent from './src/Events/ConnectionLostEvent.js'
+import ConnectionFoundEvent from './src/Events/ConnectionFoundEvent.js'
+import ConnectionInitEvent from './src/Events/ConnectionInitEvent.js'
+import ConnectionReadyEvent from './src/Events/ConnectionReadyEvent.js'
+import ConnectionWaitingEvent from './src/Events/ConnectionWaitingEvent.js'
 
 export {
   Types,
